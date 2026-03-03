@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Compras | ERP Tienda Gaming')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+
+    <main class="content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Compras</h1>
+                <p class="page-subtitle">Compras a proveedores y detalle.</p>
+            </div>
+            <a class="btn primary" th:href="@{/compras/nuevo}">
+                <i class="fa-solid fa-plus"></i> Nueva compra
+            </a>
+        </div>
+
+        <section class="grid">
+
+            <div class="panel" style="grid-column: span 8">
+                <div class="kpi-top"><i class="fa-solid fa-list"></i> Lista de compras</div>
+                <div class="table-wrap" style="margin-top:12px">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Proveedor</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th style="width:260px">Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="c : ${compras}">
+                            <td th:text="${c.id}">1</td>
+                            <td th:text="${c.proveedor != null ? c.proveedor.nombre : '—'}">Proveedor</td>
+                            <td th:text="${c.fecha}">2026-01-01</td>
+                            <td th:text="${c.estado}">PENDIENTE</td>
+                            <td>
+                                <div class="actions">
+                                    <a class="link" th:href="@{/compras/editar/{id}(id=${c.id})}">
+                                        <i class="fa-solid fa-pen"></i> Editar
+                                    </a>
+                                    <a class="link danger" th:href="@{/compras/borrar/{id}(id=${c.id})}" onclick="return confirm('¿Borrar esta compra?')">
+                                        <i class="fa-solid fa-trash"></i> Borrar
+                                    </a>
+                                    <a class="link" th:href="@{/compras(ver=${c.id})}">
+                                        <i class="fa-solid fa-receipt"></i> Factura
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- FACTURA COMPRA (TABLAS TRACÉES) -->
+            <div class="panel" style="grid-column: span 4">
+                <div class="kpi-top"><i class="fa-solid fa-receipt"></i> Factura</div>
+
+                <div th:if="${compraSeleccionada != null}" style="margin-top:12px" class="invoice-paper">
+
+                    <div class="invoice-top">
+                        <div>
+                            <div class="invoice-title">FACTURA DE COMPRA</div>
+                            <div class="invoice-company">ERP Tienda Gaming</div>
+                        </div>
+                        <button class="btn ghost invoice-print" type="button" onclick="window.print()">
+                            <i class="fa-solid fa-print"></i> Imprimir
+                        </button>
+                    </div>
+
+                    <!-- TABLA INFO -->
+                    <table class="invoice-grid">
+                        <tr>
+                            <th>Factura Nº</th>
+                            <td th:text="${compraSeleccionada.id}">1</td>
+                            <th>Fecha</th>
+                            <td th:text="${compraSeleccionada.fecha}">—</td>
+                        </tr>
+                        <tr>
+                            <th>Estado</th>
+                            <td th:text="${compraSeleccionada.estado}">—</td>
+                            <th>Proveedor</th>
+                            <td th:text="${compraSeleccionada.proveedor != null ? compraSeleccionada.proveedor.nombre : '—'}">—</td>
+                        </tr>
+                    </table>
+
+                    <!-- TABLA PROVEEDOR -->
+                    <div class="invoice-section">Datos del proveedor</div>
+                    <table class="invoice-grid">
+                        <tr>
+                            <th>Proveedor</th>
+                            <td th:text="${compraSeleccionada.proveedor != null ? compraSeleccionada.proveedor.nombre : '—'}">—</td>
+                        </tr>
+                        <tr>
+                            <th>Email</th>
+                            <td th:text="${compraSeleccionada.proveedor != null ? compraSeleccionada.proveedor.email : '—'}">—</td>
+                        </tr>
+                        <tr>
+                            <th>Teléfono</th>
+                            <td th:text="${compraSeleccionada.proveedor != null ? compraSeleccionada.proveedor.telefono : '—'}">—</td>
+                        </tr>
+                        <tr>
+                            <th>Dirección</th>
+                            <td th:text="${compraSeleccionada.proveedor != null ? compraSeleccionada.proveedor.direccion : '—'}">—</td>
+                        </tr>
+                    </table>
+
+                    <!-- TABLA PRODUCTOS -->
+                    <div class="invoice-section">Detalle de productos</div>
+
+                    <div class="invoice-table-box">
+                        <table class="invoice-lines">
+                            <thead>
+                            <tr>
+                                <th style="width:45%">Producto</th>
+                                <th class="num" style="width:15%">Cant.</th>
+                                <th class="num" style="width:20%">Precio Unit.</th>
+                                <th class="num" style="width:20%">Importe</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="d : ${detallesCompra}">
+                                <td th:text="${d.producto != null ? d.producto.nombre : '—'}">Producto</td>
+                                <td class="num" th:text="${d.cantidad}">0</td>
+                                <td class="num"
+                                    th:text="${#numbers.formatDecimal(d.precioUnitario != null ? d.precioUnitario : 0,1,'POINT',2,'POINT')} + ' €'">0 €</td>
+                                <td class="num"
+                                    th:text="${#numbers.formatDecimal(d.importeTotal,1,'POINT',2,'POINT')} + ' €'">0 €</td>
+                            </tr>
+
+                            <tr th:if="${detallesCompra == null || #lists.isEmpty(detallesCompra)}">
+                                <td colspan="4" class="empty">No hay productos en esta compra.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- TOTAL -->
+                    <table class="invoice-total">
+                        <tr>
+                            <th>TOTAL</th>
+                            <td class="num" th:text="${#numbers.formatDecimal(totalCompra,1,'POINT',2,'POINT')} + ' €'">0 €</td>
+                        </tr>
+                    </table>
+
+                </div>
+
+                <div th:if="${compraSeleccionada == null}" style="margin-top:12px;color: var(--muted);line-height:1.6">
+                    Selecciona una compra para ver la factura.
+                </div>
+            </div>
+
+        </section>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Producción | ERP Tienda Gaming')}"></head>
+<body>
+<div class="app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+
+  <main class="content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Producción</h1>
+        <p class="page-subtitle">Registro de fabricaciones y escandallos.</p>
+      </div>
+      <a class="btn primary" th:href="@{/produccion/nueva}"><i class="fa-solid fa-gears"></i> Nueva fabricación</a>
+    </div>
+
+    <p th:if="${mensaje}" class="helper" style="color:var(--ok);margin-bottom:12px" th:text="${mensaje}"></p>
+
+    <section class="panel">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Producto</th>
+            <th>Unidades</th>
+            <th>Empleado</th>
+            <th>Acciones</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:each="f : ${fabricaciones}">
+            <td th:text="${f.fecha}">fecha</td>
+            <td th:text="${f.producto != null ? f.producto.nombre : '-'}">producto</td>
+            <td th:text="${f.unidades}">0</td>
+            <td th:text="${f.empleado != null ? f.empleado.nombre : '-'}">empleado</td>
+            <td>
+              <a class="link danger" th:href="@{/produccion/eliminar/{id}(id=${f.id})}" onclick="return confirm('¿Eliminar esta fabricación? Los stocks serán revertidos.')">
+                <i class="fa-solid fa-trash"></i> Eliminar
+              </a>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(fabricaciones)}">
+            <td colspan="5" style="text-align:center;color:var(--muted)">No hay fabricaciones registradas.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

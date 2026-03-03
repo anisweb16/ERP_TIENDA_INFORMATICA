@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Escandallo | ERP Tienda Gaming')}"></head>
+<body>
+<div class="app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+
+  <main class="content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Escandallo: <span th:text="${producto.nombre}">Producto</span></h1>
+        <p class="page-subtitle">Lista de materiales (componentes) del producto compuesto.</p>
+      </div>
+      <a class="btn" th:href="@{/productos}"><i class="fa-solid fa-arrow-left"></i> Volver a productos</a>
+    </div>
+
+    <p th:if="${mensaje}" class="helper" style="color:var(--ok);margin-bottom:12px" th:text="${mensaje}"></p>
+
+    <section class="panel">
+      <form th:action="@{/produccion/escandallo/guardar}" method="post">
+        <input type="hidden" name="idProductoCompuesto" th:value="${producto.id}" />
+
+        <div class="invoice-table-box" style="margin-bottom:14px">
+          <table class="invoice-lines">
+            <thead>
+            <tr>
+              <th style="width:35%">Componente</th>
+              <th style="width:15%">Cantidad</th>
+              <th style="width:15%">Tipo (P/S/R)</th>
+              <th style="width:15%">Coste/ud</th>
+              <th style="width:10%">Acción</th>
+            </tr>
+            </thead>
+            <tbody id="lineasEscandallo">
+            <tr th:each="lin, stat : ${lineas}">
+              <td>
+                <select name="idComponentes" required style="background:#0b1230;color:#e9eefc;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);">
+                  <option value="" disabled style="background:#0b1230;color:#e9eefc;">Selecciona…</option>
+                  <option th:each="p : ${productos}" th:value="${p.id}" th:text="${p.nombre}" th:selected="${lin.componente != null and lin.componente.id == p.id}" style="background:#0b1230;color:#e9eefc;"></option>
+                </select>
+              </td>
+              <td><input type="number" name="cantidades" step="0.0001" th:value="${lin.cantidad}" min="0.0001" required style="width:100%;background:#0b1230;color:#e9eefc;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);" /></td>
+              <td>
+                <select name="tiposComponente" style="width:100%;background:#0b1230;color:#e9eefc;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);">
+                  <option value="P" th:selected="${lin.tipoComponente == 'P'}" style="background:#0b1230;color:#e9eefc;">P (Producto)</option>
+                  <option value="S" th:selected="${lin.tipoComponente == 'S'}" style="background:#0b1230;color:#e9eefc;">S (Servicio)</option>
+                  <option value="R" th:selected="${lin.tipoComponente == 'R'}" style="background:#0b1230;color:#e9eefc;">R (Recurso)</option>
+                </select>
+              </td>
+              <td><input type="number" name="preciosCosto" step="0.01" th:value="${lin.precioCostoUnidad}" min="0" style="width:100%;background:#0b1230;color:#e9eefc;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);" /></td>
+              <td style="text-align:center"><button type="button" class="btn danger" onclick="eliminarFila(this)">✕</button></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(lineas)}">
+              <td>
+                <select name="idComponentes" required style="background:#0b1230;color:#e9eefc;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);">
+                  <option value="" disabled selected style="background:#0b1230;color:#e9eefc;">Selecciona componente…</option>
+                  <option th:each="p : ${productos}" th:value="${p.id}" th:text="${p.nombre}" style="background:#0b1230;color:#e9eefc;"></option>
+                </select>
+              </td>
+              <td><input type="number" name="cantidades" step="0.0001" value="1" min="0.0001" required style="width:100%;background:#0b1230;color:#e9eefc;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);" /></td>
+              <td>
+                <select name="tiposComponente" style="width:100%;background:#0b1230;color:#e9eefc;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);">
+                  <option value="P" selected style="background:#0b1230;color:#e9eefc;">P (Producto)</option>
+                  <option value="S" style="background:#0b1230;color:#e9eefc;">S (Servicio)</option>
+                  <option value="R" style="background:#0b1230;color:#e9eefc;">R (Recurso)</option>
+                </select>
+              </td>
+              <td><input type="number" name="preciosCosto" step="0.01" value="0" min="0" style="width:100%;background:#0b1230;color:#e9eefc;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);" /></td>
+              <td style="text-align:center"><button type="button" class="btn danger" onclick="eliminarFila(this)">✕</button></td>
+            </tr>
+            <tr id="filaTemplateEscandallo" th:if="${!#lists.isEmpty(lineas)}" style="display:none">
+              <td>
+                <select name="idComponentes" style="background:#0b1230;color:#e9eefc;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);">
+                  <option value="" disabled selected style="background:#0b1230;color:#e9eefc;">Selecciona…</option>
+                  <option th:each="p : ${productos}" th:value="${p.id}" th:text="${p.nombre}" style="background:#0b1230;color:#e9eefc;"></option>
+                </select>
+              </td>
+              <td><input type="number" name="cantidades" step="0.0001" value="1" min="0.0001" style="width:100%;background:#0b1230;color:#e9eefc;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);" /></td>
+              <td>
+                <select name="tiposComponente" style="width:100%;background:#0b1230;color:#e9eefc;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);">
+                  <option value="P" selected style="background:#0b1230;color:#e9eefc;">P</option>
+                  <option value="S" style="background:#0b1230;color:#e9eefc;">S</option>
+                  <option value="R" style="background:#0b1230;color:#e9eefc;">R</option>
+                </select>
+              </td>
+              <td><input type="number" name="preciosCosto" step="0.01" value="0" min="0" style="width:100%;background:#0b1230;color:#e9eefc;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);" /></td>
+              <td style="text-align:center"><button type="button" class="btn danger" onclick="eliminarFila(this)">✕</button></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-bottom:14px">
+          <button type="button" class="btn ghost" onclick="agregarFila()"><i class="fa-solid fa-plus"></i> Añadir componente</button>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Guardar escandallo</button>
+        </div>
+      </form>
+    </section>
+  </main>
+</div>
+<script>
+  function agregarFila() {
+    const tbody = document.getElementById('lineasEscandallo');
+    const template = document.getElementById('filaTemplateEscandallo');
+    const fila = template ? template : tbody.querySelector('tr');
+    const nueva = fila.cloneNode(true);
+    if (nueva.id) nueva.removeAttribute('id');
+    nueva.style.display = '';
+    nueva.querySelectorAll('input[type="number"]').forEach(i => { i.value = i.name === 'cantidades' ? '1' : '0'; });
+    nueva.querySelectorAll('select').forEach(s => { if (s.name !== 'tiposComponente') s.selectedIndex = 0; });
+    tbody.appendChild(nueva);
+  }
+  function eliminarFila(btn) {
+    const tr = btn.closest('tr');
+    if (tr.id === 'filaTemplateEscandallo') return;
+    if (document.querySelectorAll('#lineasEscandallo tr:not(#filaTemplateEscandallo)').length > 1) tr.remove();
+  }
+</script>
+</body>
+</html>

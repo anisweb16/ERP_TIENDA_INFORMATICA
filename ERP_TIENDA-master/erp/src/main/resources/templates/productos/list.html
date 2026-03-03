@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Productos | ERP Tienda Gaming')}"></head>
+<body>
+<div class="app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+
+  <main class="content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Productos</h1>
+        <p class="page-subtitle">Stock, precios y catálogo gaming.</p>
+      </div>
+      <a class="btn primary" th:href="@{/productos/nuevo}"><i class="fa-solid fa-plus"></i> Nuevo producto</a>
+    </div>
+
+    <section class="panel">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Tipo</th>
+            <th style="width:220px">Acciones</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:each="p : ${productos}">
+            <td th:text="${p.id}">1</td>
+            <td th:text="${p.nombre}">Producto</td>
+            <td th:text="${p.precio} + ' €'">0 €</td>
+            <td>
+              <span th:text="${p.stock}">0</span>
+              <span th:if="${p.stock != null and p.stock < 5}" style="margin-left:8px;color: var(--warn);font-weight:900">• Bajo</span>
+            </td>
+            <td>
+              <span th:text="${(p.esCompuesto != null and p.esCompuesto) ? 'Compuesto' : 'Simple'}">Simple</span>
+            </td>
+            <td>
+              <div class="actions">
+                <a class="link" th:href="@{/productos/editar/{id}(id=${p.id})}"><i class="fa-solid fa-pen"></i> Editar</a>
+                <a th:if="${p.esCompuesto}" class="link" th:href="@{/produccion/escandallo/{id}(id=${p.id})}"><i class="fa-solid fa-list"></i> Escandallo</a>
+                <a class="link danger" th:href="@{/productos/borrar/{id}(id=${p.id})}" onclick="return confirm('¿Borrar este producto?')">
+                  <i class="fa-solid fa-trash"></i> Borrar
+                </a>
+              </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

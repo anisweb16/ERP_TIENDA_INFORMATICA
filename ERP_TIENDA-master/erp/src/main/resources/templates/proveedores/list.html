@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Proveedores | ERP Tienda Gaming')}"></head>
+<body>
+<div class="app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+
+  <main class="content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Proveedores</h1>
+        <p class="page-subtitle">Gestiona proveedores y compras.</p>
+      </div>
+      <a class="btn primary" th:href="@{/proveedores/nuevo}"><i class="fa-solid fa-plus"></i> Nuevo proveedor</a>
+    </div>
+
+    <section class="panel">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th style="width:180px">Acciones</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:each="p : ${proveedores}">
+            <td th:text="${p.id}">1</td>
+            <td th:text="${p.nombre}">Proveedor</td>
+            <td th:text="${p.telefono}">Tel</td>
+            <td th:text="${p.email}">Email</td>
+            <td>
+              <div class="actions">
+                <a class="link" th:href="@{/proveedores/editar/{id}(id=${p.id})}"><i class="fa-solid fa-pen"></i> Editar</a>
+                <a class="link danger" th:href="@{/proveedores/borrar/{id}(id=${p.id})}" onclick="return confirm('¿Borrar este proveedor?')">
+                  <i class="fa-solid fa-trash"></i> Borrar
+                </a>
+              </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

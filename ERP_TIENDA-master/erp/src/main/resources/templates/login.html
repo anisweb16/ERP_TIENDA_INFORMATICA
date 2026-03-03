@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Login | ERP Tienda Gaming')}"></head>
+
+<body>
+
+<div class="auth-wrap">
+    <div class="auth-card">
+
+        <!-- LEFT PANEL -->
+        <div class="panel auth-left">
+            <div class="brand" style="padding:0 0 8px 0">
+                <div class="brand-badge">GX</div>
+                <div>
+                    <div class="brand-title" style="font-size:18px">ERP Tienda Gaming</div>
+                    <div class="brand-sub">Acceso seguro al sistema</div>
+                </div>
+            </div>
+
+            <h1 class="auth-title">Iniciar sesión</h1>
+
+            <div class="auth-bullets">
+                • Gestión de clientes, proveedores y stock<br/>
+                • Ventas, compras y facturas<br/>
+                • Dashboard con métricas reales
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="panel auth-right">
+
+            <form th:action="@{/login}" method="post">
+
+                <div class="form-grid">
+
+                    <div class="field full">
+                        <label>Email</label>
+                        <input type="email" name="email" placeholder="Introduce tu email" required />
+                    </div>
+
+                    <div class="field full">
+                        <label>Contraseña</label>
+                        <input type="password" name="password" placeholder="Introduce tu contraseña" required />
+                    </div>
+
+                </div>
+
+                <!-- ERROR MESSAGE -->
+                <div th:if="${error}" style="margin-top:12px;color:var(--danger);font-weight:900">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span th:text="${error}">Credenciales incorrectas</span>
+                </div>
+
+                <!-- BUTTONS -->
+                <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:18px">
+                    <a class="btn ghost" th:href="@{/register}">
+                        <i class="fa-solid fa-user-plus"></i> Crear cuenta
+                    </a>
+
+                    <button class="btn primary" type="submit">
+                        <i class="fa-solid fa-right-to-bracket"></i> Entrar
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

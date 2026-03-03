@@ -1,0 +1,284 @@
+-- Base de datos completa actualizada (sin dropear tablas existentes)
+-- Crea la BBDD si no existe, asegura AUTO_INCREMENT en claves, define ENUMs
+-- y añade datos de ejemplo (tienda tecnológica). Haz backup antes de ejecutar.
+
+CREATE DATABASE IF NOT EXISTS erp_tienda
+  DEFAULT CHARACTER SET utf8mb4
+  DEFAULT COLLATE utf8mb4_general_ci;
+USE erp_tienda;
+
+-- =========================
+-- Clientes y Proveedores (asegurar existencia y AUTO_INCREMENT)
+-- =========================
+CREATE TABLE IF NOT EXISTS Clientes (
+  id_cliente INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(30) NOT NULL,
+  direccion VARCHAR(100),
+  telefono VARCHAR(12),
+  email VARCHAR(50)
+);
+
+CREATE TABLE IF NOT EXISTS Proveedores (
+  id_proveedor INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(50),
+  direccion VARCHAR(100),
+  telefono VARCHAR(20),
+  email VARCHAR(100)
+);
+
+-- Si por alguna razón las tablas existieran sin AUTO_INCREMENT, intentamos modificar.
+-- (Si la columna ya es AUTO_INCREMENT, ALTER no cambia nada.)
+ALTER TABLE Clientes MODIFY id_cliente INT NOT NULL AUTO_INCREMENT PRIMARY KEY;
+ALTER TABLE Proveedores MODIFY id_proveedor INT NOT NULL AUTO_INCREMENT PRIMARY KEY;
+
+-- =========================
+-- Productos, Empleados, Usuarios
+-- =========================
+CREATE TABLE IF NOT EXISTS productos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    precio DOUBLE NOT NULL,
+    stock INT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS empleados (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    puesto VARCHAR(100) NOT NULL,
+    salario DOUBLE NOT NULL,
+    email VARCHAR(100)
+);
+
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(100) NOT NULL
+);
+
+-- =========================
+-- Pedidos (ventas) y detalle_pedido
+-- Definimos estado y metodo_pago como ENUM desde el principio
+-- Si la tabla ya existe con otros tipos, la convertimos a ENUM más abajo.
+-- =========================
+CREATE TABLE IF NOT EXISTS pedidos (
+  id_pedido INT AUTO_INCREMENT PRIMARY KEY,
+  id_cliente INT NOT NULL,
+  fecha DATE NOT NULL,
+  estado ENUM('COMPLETADO','PENDIENTE') NOT NULL DEFAULT 'PENDIENTE',
+  metodo_pago ENUM('TARJETA','EFECTIVO','PAYPAL') NOT NULL DEFAULT 'EFECTIVO',
+  FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente)
+);
+
+CREATE TABLE IF NOT EXISTS detalle_pedido (
+  id_detalle INT AUTO_INCREMENT PRIMARY KEY,
+  id_pedido INT NOT NULL,
+  id_producto INT NOT NULL,
+  cantidad INT NOT NULL,
+  importe_total DOUBLE NOT NULL,
+  FOREIGN KEY (id_pedido) REFERENCES pedidos(id_pedido) ON DELETE CASCADE,
+  FOREIGN KEY (id_producto) REFERENCES productos(id)
+);
+
+-- =========================
+-- Compras y detalle_compra
+-- Definimos estado y metodo_pago como ENUM desde el principio
+-- =========================
+CREATE TABLE IF NOT EXISTS compras (
+  id_compra INT AUTO_INCREMENT PRIMARY KEY,
+  id_proveedor INT NOT NULL,
+  fecha DATE NOT NULL,
+  estado ENUM('COMPLETADO','PENDIENTE') NOT NULL DEFAULT 'PENDIENTE',
+  metodo_pago ENUM('TARJETA','EFECTIVO','PAYPAL') NOT NULL DEFAULT 'EFECTIVO',
+  total DOUBLE DEFAULT 0,
+  FOREIGN KEY (id_proveedor) REFERENCES Proveedores(id_proveedor)
+);
+
+CREATE TABLE IF NOT EXISTS detalle_compra (
+  id_detalle_compra INT AUTO_INCREMENT PRIMARY KEY,
+  id_compra INT NOT NULL,
+  id_producto INT NOT NULL,
+  cantidad INT NOT NULL,
+  precio_unitario DOUBLE NOT NULL,
+  importe_total DOUBLE NOT NULL,
+  FOREIGN KEY (id_compra) REFERENCES compras(id_compra) ON DELETE CASCADE,
+  FOREIGN KEY (id_producto) REFERENCES productos(id)
+);
+
+-- =========================
+-- Si las tablas ya existían con VARCHAR en estado/metodo_pago,
+-- convertimos las columnas a ENUM de forma segura.
+-- (Esto no dropea tablas; convierte el tipo.)
+-- =========================
+
+-- Normalizar valores previos (si existen) para evitar errores al convertir.
+-- Mapear variantes comunes a los valores exactos del ENUM.
+UPDATE pedidos
+SET estado = CASE
+  WHEN UPPER(estado) IN ('COMPLETADO','COMPLETA','FINALIZADO','FIN','DONE') THEN 'COMPLETADO'
+  ELSE 'PENDIENTE'
+END
+WHERE estado IS NULL OR UPPER(estado) NOT IN ('COMPLETADO','PENDIENTE');
+
+UPDATE compras
+SET estado = CASE
+  WHEN UPPER(estado) IN ('COMPLETADO','COMPLETA','FINALIZADO','FIN','DONE') THEN 'COMPLETADO'
+  ELSE 'PENDIENTE'
+END
+WHERE estado IS NULL OR UPPER(estado) NOT IN ('COMPLETADO','PENDIENTE');
+
+UPDATE pedidos
+SET metodo_pago = CASE
+  WHEN LOWER(metodo_pago) IN ('tarjeta','card','credit card','card payment') THEN 'TARJETA'
+  WHEN LOWER(metodo_pago) IN ('paypal') THEN 'PAYPAL'
+  WHEN LOWER(metodo_pago) IN ('efectivo','cash') THEN 'EFECTIVO'
+  ELSE 'EFECTIVO'
+END
+WHERE metodo_pago IS NULL OR UPPER(metodo_pago) NOT IN ('TARJETA','EFECTIVO','PAYPAL');
+
+UPDATE compras
+SET metodo_pago = CASE
+  WHEN LOWER(metodo_pago) IN ('tarjeta','card','credit card','card payment') THEN 'TARJETA'
+  WHEN LOWER(metodo_pago) IN ('paypal') THEN 'PAYPAL'
+  WHEN LOWER(metodo_pago) IN ('efectivo','cash') THEN 'EFECTIVO'
+  ELSE 'EFECTIVO'
+END
+WHERE metodo_pago IS NULL OR UPPER(metodo_pago) NOT IN ('TARJETA','EFECTIVO','PAYPAL');
+
+-- Convertir columnas a ENUM (si ya eran ENUM esto no cambia)
+ALTER TABLE pedidos
+  MODIFY COLUMN estado ENUM('COMPLETADO','PENDIENTE') NOT NULL DEFAULT 'PENDIENTE',
+  MODIFY COLUMN metodo_pago ENUM('TARJETA','EFECTIVO','PAYPAL') NOT NULL DEFAULT 'EFECTIVO';
+
+ALTER TABLE compras
+  MODIFY COLUMN estado ENUM('COMPLETADO','PENDIENTE') NOT NULL DEFAULT 'PENDIENTE',
+  MODIFY COLUMN metodo_pago ENUM('TARJETA','EFECTIVO','PAYPAL') NOT NULL DEFAULT 'EFECTIVO';
+
+-- =========================
+-- Triggers para detalle_compra (recrear si existe)
+-- =========================
+DROP TRIGGER IF EXISTS trg_after_insert_detalle_compra;
+DROP TRIGGER IF EXISTS trg_after_delete_detalle_compra;
+DROP TRIGGER IF EXISTS trg_after_update_detalle_compra;
+
+DELIMITER $$
+CREATE TRIGGER trg_after_insert_detalle_compra
+AFTER INSERT ON detalle_compra
+FOR EACH ROW
+BEGIN
+  UPDATE productos
+  SET stock = stock + NEW.cantidad
+  WHERE id = NEW.id_producto;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER trg_after_delete_detalle_compra
+AFTER DELETE ON detalle_compra
+FOR EACH ROW
+BEGIN
+  UPDATE productos
+  SET stock = stock - OLD.cantidad
+  WHERE id = OLD.id_producto;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER trg_after_update_detalle_compra
+AFTER UPDATE ON detalle_compra
+FOR EACH ROW
+BEGIN
+  DECLARE diff INT;
+  SET diff = NEW.cantidad - OLD.cantidad;
+  UPDATE productos SET stock = stock + diff
+  WHERE id = NEW.id_producto;
+END$$
+DELIMITER ;
+
+-- =========================
+-- Poblar datos de ejemplo (tienda tecnológica)
+-- Usamos ON DUPLICATE KEY UPDATE para no duplicar si ya existen registros
+-- =========================
+
+-- Clientes
+INSERT INTO Clientes (id_cliente, nombre, direccion, telefono, email)
+VALUES (1, 'Test', 'Madrid', '600000000', 'test@mail.com')
+ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
+
+INSERT INTO Clientes (nombre, direccion, telefono, email)
+VALUES
+  ('Javier Lopez', 'Calle Mayor 10, Madrid', '600111222', 'javier@example.com'),
+  ('María García', 'C/ Alcalá 5, Madrid', '600333444', 'maria@example.com')
+ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
+
+-- Proveedores
+INSERT INTO Proveedores (id_proveedor, nombre, direccion, telefono, email)
+VALUES
+  (1, 'Sony Iberia', 'Av. de la Tecnología 1, Madrid', '910000001', 'sony@proveedor.com'),
+  (2, 'Microsoft España', 'Av. Consolas 2, Madrid', '910000002', 'microsoft@proveedor.com'),
+  (3, 'Nintendo Distribuciones', 'C/ Juegos 3, Madrid', '910000003', 'nintendo@proveedor.com')
+ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), direccion = VALUES(direccion), telefono = VALUES(telefono), email = VALUES(email);
+
+-- Productos (ejemplos)
+INSERT INTO productos (id, nombre, precio, stock) VALUES
+  (1, 'PlayStation 5 (PS5) - Consola', 549.99, 10),
+  (2, 'Xbox Series X - Consola', 499.99, 8),
+  (3, 'Nintendo Switch OLED', 349.99, 12),
+  (4, 'NVIDIA RTX 4070 GPU', 699.99, 5),
+  (5, 'Samsung 1TB NVMe SSD', 119.99, 20)
+ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), precio = VALUES(precio), stock = VALUES(stock);
+
+-- Empleados
+INSERT INTO empleados (nombre, puesto, salario, email)
+VALUES
+  ('Ana Pérez', 'Gerente', 3000.00, 'ana@tienda.com'),
+  ('Carlos Ruiz', 'Vendedor', 1800.00, 'carlos@tienda.com')
+ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
+
+-- Usuarios (cuenta admin de ejemplo)
+INSERT INTO usuarios (nombre, email, password)
+VALUES ('Admin', 'admin@erp.local', 'adminpass')
+ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
+
+-- =========================
+-- Ejemplo de pedido (venta) con ENUMs ya definidos
+-- Insertamos para el cliente 'Javier Lopez' si existe, si no se usa cliente 1 (Test)
+-- =========================
+INSERT INTO pedidos (id_cliente, fecha, estado, metodo_pago)
+VALUES (
+  COALESCE((SELECT id_cliente FROM Clientes WHERE nombre = 'Javier Lopez' LIMIT 1), 1),
+  CURDATE(),
+  'PENDIENTE',
+  'TARJETA'
+);
+
+SET @last_pedido_id = LAST_INSERT_ID();
+
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, importe_total)
+VALUES (@last_pedido_id, 1, 1, (SELECT precio FROM productos WHERE id = 1));
+
+-- =========================
+-- Ejemplo de compra (aumenta stock via trigger)
+-- =========================
+INSERT INTO compras (id_proveedor, fecha, estado, metodo_pago, total)
+VALUES (
+  COALESCE((SELECT id_proveedor FROM Proveedores WHERE nombre = 'Sony Iberia' LIMIT 1), 1),
+  CURDATE(),
+  'COMPLETADO',
+  'TARJETA',
+  5 * 499.99
+);
+
+SET @last_compra_id = LAST_INSERT_ID();
+
+INSERT INTO detalle_compra (id_compra, id_producto, cantidad, precio_unitario, importe_total)
+VALUES (@last_compra_id, 1, 5, 499.99, 5 * 499.99);
+
+-- =========================
+-- Comprobaciones rápidas (opcional)
+-- =========================
+SELECT COUNT(*) AS clientes_total FROM Clientes;
+SELECT COUNT(*) AS proveedores_total FROM Proveedores;
+SELECT COUNT(*) AS productos_total FROM productos;
+SELECT id_pedido, id_cliente, fecha, estado, metodo_pago FROM pedidos ORDER BY id_pedido DESC LIMIT 5;
+SELECT id_compra, id_proveedor, fecha, estado, metodo_pago, total FROM compras ORDER BY id_compra DESC LIMIT 5;

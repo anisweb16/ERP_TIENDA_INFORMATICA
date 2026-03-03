@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Clientes | ERP Tienda Gaming')}"></head>
+<body>
+<div class="app">
+
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+
+  <main class="content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Clientes</h1>
+        <p class="page-subtitle">Administra tu base de clientes.</p>
+      </div>
+      <a class="btn primary" th:href="@{/clientes/nuevo}"><i class="fa-solid fa-user-plus"></i> Nuevo cliente</a>
+    </div>
+
+    <section class="panel">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Dirección</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th style="width:180px">Acciones</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:each="c : ${clientes}">
+            <td th:text="${c.id}">1</td>
+            <td th:text="${c.nombre}">Nombre</td>
+            <td th:text="${c.direccion}">Dirección</td>
+            <td th:text="${c.telefono}">Tel</td>
+            <td th:text="${c.email}">Email</td>
+            <td>
+              <div class="actions">
+                <a class="link" th:href="@{/clientes/editar/{id}(id=${c.id})}"><i class="fa-solid fa-pen"></i> Editar</a>
+                <a class="link danger" th:href="@{/clientes/borrar/{id}(id=${c.id})}" onclick="return confirm('¿Borrar este cliente?')">
+                  <i class="fa-solid fa-trash"></i> Borrar
+                </a>
+              </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+</div>
+</body>
+</html>

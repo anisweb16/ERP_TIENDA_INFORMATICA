@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head th:fragment="head(title)">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:text="${title}">ERP Tienda Gaming</title>
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <link rel="stylesheet" th:href="@{/css/gaming.css}" />
+</head>
+
+<body>
+
+<aside class="sidebar" th:fragment="sidebar">
+    <div class="brand">
+        <div class="brand-badge">GX</div>
+        <div>
+            <div class="brand-title">ERP Tienda Gaming</div>
+            <div class="brand-sub">Gestión · Ventas · Compras</div>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <a th:href="@{/dashboard}">
+            <i class="fa-solid fa-chart-line"></i> Dashboard
+        </a>
+        <a th:href="@{/clientes}">
+            <i class="fa-solid fa-users"></i> Clientes
+        </a>
+        <a th:href="@{/proveedores}">
+            <i class="fa-solid fa-truck-fast"></i> Proveedores
+        </a>
+        <a th:href="@{/productos}">
+            <i class="fa-solid fa-microchip"></i> Productos
+        </a>
+        <a th:href="@{/empleados}">
+            <i class="fa-solid fa-user-tie"></i> Empleados
+        </a>
+        <a th:href="@{/ventas}">
+            <i class="fa-solid fa-cart-shopping"></i> Ventas
+        </a>
+        <a th:href="@{/compras}">
+            <i class="fa-solid fa-basket-shopping"></i> Compras
+        </a>
+        <a th:href="@{/produccion}">
+            <i class="fa-solid fa-gears"></i> Producción
+        </a>
+        <a th:href="@{/logout}" class="danger">
+            <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+        </a>
+    </nav>
+</aside>
+
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Empleados | ERP Tienda Gaming')}"></head>
+<body>
+<div class="app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+
+  <main class="content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Empleados</h1>
+        <p class="page-subtitle">Puestos, salarios y equipo.</p>
+      </div>
+      <a class="btn primary" th:href="@{/empleados/nuevo}"><i class="fa-solid fa-plus"></i> Nuevo empleado</a>
+    </div>
+
+    <section class="panel">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Puesto</th>
+            <th>Salario</th>
+            <th style="width:180px">Acciones</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:each="e : ${empleados}">
+            <td th:text="${e.id}">1</td>
+            <td th:text="${e.nombre}">Empleado</td>
+            <td th:text="${e.puesto}">Puesto</td>
+            <td th:text="${e.salario} + ' €'">0 €</td>
+            <td>
+              <div class="actions">
+                <a class="link" th:href="@{/empleados/editar/{id}(id=${e.id})}"><i class="fa-solid fa-pen"></i> Editar</a>
+                <a class="link danger" th:href="@{/empleados/borrar/{id}(id=${e.id})}" onclick="return confirm('¿Borrar este empleado?')">
+                  <i class="fa-solid fa-trash"></i> Borrar
+                </a>
+              </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

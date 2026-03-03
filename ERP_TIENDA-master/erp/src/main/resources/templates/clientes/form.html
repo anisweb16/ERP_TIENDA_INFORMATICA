@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Formulario Cliente | ERP Tienda Gaming')}"></head>
+<body>
+<div class="app">
+
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+
+  <main class="content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title" th:text="${cliente.id != null} ? 'Editar cliente' : 'Nuevo cliente'">Nuevo cliente</h1>
+        <p class="page-subtitle">Completa los datos y guarda.</p>
+      </div>
+      <a class="btn" th:href="@{/clientes}"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+    </div>
+
+    <section class="panel">
+      <form th:action="@{/clientes/guardar}" th:object="${cliente}" method="post">
+        <input type="hidden" th:field="*{id}" />
+
+        <div class="form-grid">
+          <div class="field">
+            <label>Nombre</label>
+            <input type="text" th:field="*{nombre}" required />
+          </div>
+
+          <div class="field">
+            <label>Teléfono</label>
+            <input type="text" th:field="*{telefono}" />
+          </div>
+
+          <div class="field full">
+            <label>Dirección</label>
+            <input type="text" th:field="*{direccion}" />
+          </div>
+
+          <div class="field full">
+            <label>Email</label>
+            <input type="email" th:field="*{email}" />
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+          <a class="btn ghost" th:href="@{/clientes}">Cancelar</a>
+          <button class="btn primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+</div>
+</body>
+</html>

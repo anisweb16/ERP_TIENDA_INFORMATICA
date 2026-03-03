@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Registro | ERP Tienda Gaming')}"></head>
+<body>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+
+    <div class="panel auth-left">
+      <div class="brand" style="padding:0 0 8px 0">
+        <div class="brand-badge">GX</div>
+        <div>
+          <div class="brand-title" style="font-size:18px">ERP Tienda Gaming</div>
+          <div class="brand-sub">Crea tu usuario</div>
+        </div>
+      </div>
+      <h1 class="auth-title">Registro</h1>
+      <div class="auth-bullets">
+        Usa un usuario y contraseña para acceder al ERP.
+      </div>
+    </div>
+
+    <div class="panel auth-right">
+      <form th:action="@{/register}" method="post">
+        <div class="form-grid">
+          <div class="field full">
+            <label>Usuario</label>
+            <input type="text" name="username" required />
+          </div>
+          <div class="field full">
+            <label>Contraseña</label>
+            <input type="password" name="password" required />
+          </div>
+        </div>
+
+        <div th:if="${error}" style="margin-top:10px;color: var(--danger);font-weight:900">
+          <i class="fa-solid fa-triangle-exclamation"></i> <span th:text="${error}">Error</span>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+          <a class="btn ghost" th:href="@{/login}">Ya tengo cuenta</a>
+          <button class="btn primary" type="submit"><i class="fa-solid fa-user-plus"></i> Crear</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

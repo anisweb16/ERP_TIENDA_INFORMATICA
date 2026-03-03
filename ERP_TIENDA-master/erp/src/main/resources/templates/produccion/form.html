@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Nueva fabricación | ERP Tienda Gaming')}"></head>
+<body>
+<div class="app">
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+
+  <main class="content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Nueva fabricación</h1>
+        <p class="page-subtitle">Producto, unidades, empleado y fecha.</p>
+      </div>
+      <a class="btn" th:href="@{/produccion}"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+    </div>
+
+    <p th:if="${errorMessage}" class="helper" style="color:var(--danger);margin-bottom:12px" th:text="${errorMessage}"></p>
+
+    <section class="panel">
+      <form th:action="@{/produccion/guardar}" method="post">
+        <div class="form-grid">
+          <div class="field full">
+            <label>Producto a fabricar</label>
+            <select name="idProducto" required style="background-color: #0b1230; color: #e9eefc;">
+              <option value="" disabled selected>Selecciona producto…</option>
+              <option th:each="p : ${productos}"
+                      th:value="${p.id}"
+                      th:text="${p.nombre}">
+              </option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Unidades</label>
+            <input type="number" name="unidades" value="1" min="1" required />
+          </div>
+          <div class="field">
+            <label>Fecha</label>
+            <input type="date" name="fecha" th:value="${fabricacion != null and fabricacion.fecha != null} ? ${#temporals.format(fabricacion.fecha, 'yyyy-MM-dd')} : ${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" required />
+          </div>
+          <div class="field full">
+            <label>Empleado</label>
+            <select name="idEmpleado" required style="background-color: #0b1230; color: #e9eefc;">
+              <option value="" disabled selected>Selecciona empleado…</option>
+              <option th:each="e : ${empleados}" th:value="${e.id}" th:text="${e.nombre}">empleado</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+          <a class="btn ghost" th:href="@{/produccion}">Cancelar</a>
+          <button class="btn primary" type="submit"><i class="fa-solid fa-gears"></i> Ejecutar fabricación</button>
+        </div>
+      </form>
+    </section>
+  </main>
+</div>
+</body>
+</html>

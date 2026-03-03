@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Dashboard | ERP Tienda Gaming')}"></head>
+
+<!-- Chart.js only for dashboard -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<body>
+<div class="app">
+
+  <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+
+  <main class="content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Panel de Control</h1>
+        <p class="page-subtitle">Resumen rápido del negocio y actividad reciente.</p>
+      </div>
+    </div>
+
+    <section class="grid">
+
+      <!-- KPIs -->
+      <div class="panel kpi">
+        <div class="kpi-top"><i class="fa-solid fa-users"></i> Clientes</div>
+        <div class="kpi-value" th:text="${totalClientes}">0</div>
+        <div class="kpi-note">Base de clientes registrada</div>
+      </div>
+
+      <div class="panel kpi">
+        <div class="kpi-top"><i class="fa-solid fa-microchip"></i> Productos</div>
+        <div class="kpi-value" th:text="${totalProductos}">0</div>
+        <div class="kpi-note">Catálogo disponible</div>
+      </div>
+
+      <div class="panel kpi">
+        <div class="kpi-top"><i class="fa-solid fa-cart-shopping"></i> Ventas</div>
+        <div class="kpi-value" th:text="${totalVentas}">0</div>
+        <div class="kpi-note">Pedidos registrados</div>
+      </div>
+
+      <div class="panel kpi">
+        <div class="kpi-top"><i class="fa-solid fa-basket-shopping"></i> Compras</div>
+        <div class="kpi-value" th:text="${totalCompras}">0</div>
+        <div class="kpi-note">Compras a proveedores</div>
+      </div>
+
+      <div class="panel kpi">
+        <div class="kpi-top"><i class="fa-solid fa-coins"></i> Ingresos</div>
+        <div class="kpi-value" th:text="${#numbers.formatDecimal(ingresos, 1, 'POINT', 2, 'POINT')} + ' €'">0 €</div>
+        <div class="kpi-note">Suma de detalle_pedido</div>
+      </div>
+
+      <div class="panel kpi">
+        <div class="kpi-top"><i class="fa-solid fa-receipt"></i> Gastos</div>
+        <div class="kpi-value" th:text="${#numbers.formatDecimal(gastos, 1, 'POINT', 2, 'POINT')} + ' €'">0 €</div>
+        <div class="kpi-note">Suma de detalle_compra</div>
+      </div>
+
+      <div class="panel kpi">
+        <div class="kpi-top"><i class="fa-solid fa-chart-pie"></i> Beneficio</div>
+        <div class="kpi-value" th:text="${#numbers.formatDecimal(beneficio, 1, 'POINT', 2, 'POINT')} + ' €'">0 €</div>
+        <div class="kpi-note">Ingresos − Gastos</div>
+      </div>
+
+      <div class="panel kpi">
+        <div class="kpi-top"><i class="fa-solid fa-triangle-exclamation"></i> Stock Bajo</div>
+        <div class="kpi-value" th:text="${stockBajo}">0</div>
+        <div class="kpi-note">Productos con stock &lt; 5</div>
+      </div>
+
+      <!-- Charts -->
+      <div class="panel chart">
+        <div class="kpi-top"><i class="fa-solid fa-scale-balanced"></i> Ventas vs Compras</div>
+        <canvas id="chartVC"></canvas>
+      </div>
+
+      <div class="panel chart">
+        <div class="kpi-top"><i class="fa-solid fa-layer-group"></i> Estado de Ventas</div>
+        <canvas id="chartEstado"></canvas>
+      </div>
+
+      <!-- Low stock table -->
+      <div class="panel table-card">
+        <div class="kpi-top"><i class="fa-solid fa-boxes-stacked"></i> Productos con stock bajo</div>
+        <div class="table-wrap" style="margin-top:12px">
+          <table class="data-table" style="min-width:520px">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Stock</th>
+                <th>Precio</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="p : ${productosStockBajo}">
+                <td th:text="${p.nombre}">Producto</td>
+                <td th:text="${p.stock}">0</td>
+                <td th:text="${p.precio} + ' €'">0 €</td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(productosStockBajo)}">
+                <td colspan="3" style="color: rgba(233,238,252,.72);">No hay productos con stock bajo.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Quick links -->
+      <div class="panel table-card">
+        <div class="kpi-top"><i class="fa-solid fa-bolt"></i> Accesos rápidos</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+          <a class="btn primary" th:href="@{/ventas/nuevo}"><i class="fa-solid fa-plus"></i> Nueva venta</a>
+          <a class="btn" th:href="@{/compras/nuevo}"><i class="fa-solid fa-plus"></i> Nueva compra</a>
+          <a class="btn" th:href="@{/productos/nuevo}"><i class="fa-solid fa-plus"></i> Nuevo producto</a>
+          <a class="btn ghost" th:href="@{/clientes/nuevo}"><i class="fa-solid fa-user-plus"></i> Nuevo cliente</a>
+        </div>
+      </div>
+
+    </section>
+  </main>
+</div>
+
+<script th:inline="javascript">
+  const ventasCount = /*[[${totalVentas}]]*/ 0;
+  const comprasCount = /*[[${totalCompras}]]*/ 0;
+
+  const estadoLabels = /*[[${estadoVentaLabels}]]*/ [];
+  const estadoValues = /*[[${estadoVentaValues}]]*/ [];
+
+  const ctxVC = document.getElementById('chartVC');
+  new Chart(ctxVC, {
+    type: 'bar',
+    data: {
+      labels: ['Ventas', 'Compras'],
+      datasets: [{
+        label: 'Registros',
+        data: [ventasCount, comprasCount]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0 } }
+      }
+    }
+  });
+
+  const ctxEstado = document.getElementById('chartEstado');
+  new Chart(ctxEstado, {
+    type: 'doughnut',
+    data: {
+      labels: estadoLabels,
+      datasets: [{
+        label: 'Ventas',
+        data: estadoValues
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+</script>
+
+</body>
+</html>
